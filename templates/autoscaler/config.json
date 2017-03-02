@@ -1,0 +1,105 @@
+{
+    {% if alert %}
+    "alerter": {
+        {% include "common/alert-config.json" %}
+    },
+    {% endif %}
+    "monitoringSubsystem": {
+        "metricStreamer": {
+            "type": "InfluxdbMetricStreamer",
+            "config": {
+                "host": "{{ influxdb.host }}",
+                "port": {{ influxdb.port }},
+                "security": {
+                    "auth": {
+                        "username": "{{ influxdb.username }}",
+                        "password": "{{ influxdb.password }}"
+                    }
+                },
+                "pollInterval": {
+                    "time": {{ metric.poll_interval }},
+                    "unit": "seconds"
+                },
+                "metricStreams": [
+                    {
+                        "id": "average.cpu.percent.stream",
+                        "metricName": "cpu.percent",
+                        "database": "telegraf",
+                        "measurement": "cpu",
+                        "fieldKey": "usage_idle",
+                        "function": "MEAN",
+                        "downsample": { "time": 10, "unit": "seconds" },
+                        "dataSettlingTime":  {
+                            "time": {{ metric.data_settling_interval }},
+                            "unit": "seconds"
+                        }
+                    }
+                ]
+            }
+        },
+        "systemHistorian": {
+            "type": "InfluxdbSystemHistorian",
+            "config": {
+                "host": "{{ influxdb.host }}",
+                "port": {{ influxdb.port }},
+                "security": {
+                    "auth": {
+                        "username": "{{ influxdb.username }}",
+                        "password": "{{ influxdb.password }}"
+                    }
+                },
+                "database": "statsdb",
+                "reportingInterval": { "time": 10, "unit": "seconds" }
+            }
+        }
+    },
+    "metronome": {
+        "horizon": { "time": 1, "unit": "seconds" },
+        "interval": { "time": {{ scaling.interval }}, "unit": "seconds" }
+    },
+    "predictionSubsystem": {
+        "predictors": [{
+            "id": "p1",
+            "type": "RuleBasedPredictor",
+            "metricStream": "average.cpu.percent.stream",
+            "parameters": {
+                "cooldownPeriod": {
+                    "time": {{ scaling.cooldown }},
+                    "unit": "seconds"
+                },
+                "scalingRules": [
+                    {
+                        "condition": "BELOW",
+                        "threshold": {{ scaling.threshold_upscale }},
+                        "period": {
+                            "time": {{ scaling.period_upscale }},
+                            "unit": "seconds"
+                        },
+                        "resize": "1",
+                        "unit": "INSTANCES"
+                    },
+                    {
+                        "condition": "ABOVE",
+                        "threshold": {{ scaling.threshold_downscale }},
+                        "period": {
+                            "time": {{ scaling.period_downscale }},
+                            "unit": "seconds"
+                        },
+                        "resize": "-1",
+                        "unit": "INSTANCES"
+                    }
+                ]
+            }
+        }],
+        "capacityLimits": [{
+                "id": "baseline",
+                "rank": 1,
+                "schedule": "* * * * * ? *",
+                "min": {{ scaling.min_units }},
+                "max": {{ scaling.max_units }}
+        }]
+    },
+    "cloudPool": {
+        "cloudPoolUrl": "{{ cloudpool.url }}"
+    }
+}

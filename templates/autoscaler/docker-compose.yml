@@ -1,0 +1,19 @@
+version: "2"
+
+services:
+  autoscaler:
+    container_name: "autoscaler"
+    extends:
+      file: "../docker-compose-base.yml"
+      service: "_base"
+    image: "elastisys/charmscaler-restricted:{{ tag }}"
+    volumes:
+      - "/var/log/elastisys:/var/log/elastisys"
+      - "/var/lib/elastisys:/var/lib/elastisys"
+    environment:
+      - "HTTP_PORT=80"
+      - "JVM_OPTS=-Xmx128m"
+      - "STORAGE_DIR=/var/lib/elastisys/autoscaler"
+      - "LOG_DIR=/var/log/elastisys/autoscaler"
+    ports:
+      - "{{ port }}:80"

@@ -1,0 +1,10 @@
+repo: https://github.com/elastisys/layer-charmscaler
+includes:
+  - layer:docker
+  - layer:metrics
+  - interface:influxdb-api
+  - interface:juju-info
+options:
+  basic:
+    use_venv: true
+    include_system_packages: true

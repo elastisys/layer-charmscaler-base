@@ -1,0 +1,12 @@
+#!/bin/bash
+
+CONTAINER=$(action-get container)
+
+result=$(docker inspect $CONTAINER)
+if [ "$?" != "0" ]; then
+    action-fail "$result"
+    juju-log -l ERROR "$result"
+else
+    juju-log -l DEBUG "$result"
+    action-set output="$result"
+fi

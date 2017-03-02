@@ -1,0 +1,27 @@
+name: charmscaler
+summary: The Elastisys CharmScaler is an autoscaler for Juju applications
+maintainers:
+  - Elastisys <techteam@elastisys.com>
+description: |
+  The CharmScaler is an autoscaler for Juju applications. Based on Elastisys'
+  autoscaling engine, it rightsizes your application deployments using
+  sophisticated auto-scaling algorithms to ensure that the application runs
+  cost-efficiently and is responsive at all times, even in the face of sudden
+  load spikes. At times of high anticipated load your charm is reinforced with
+  additional units -- units that are automatically decomissioned as the
+  pressure on your application goes down.
+tags:
+  - ops
+  - performance
+series:
+  - xenial
+subordinate: false
+requires:
+  scalable-charm:
+    interface: juju-info
+  db-api:
+    interface: influxdb-api
+resources:
+  docker-images:
+    type: file
+    filename: docker-images.tar

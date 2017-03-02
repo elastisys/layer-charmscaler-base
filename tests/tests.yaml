@@ -1,0 +1,10 @@
+reset: true
+reset_timeout: 300
+tests: "[0-9]*"
+makefile:
+  - lint
+  - unit_test
+virtualenv: true
+virtualenv_python: python3.5
+requirements:
+  - test-requirements.txt

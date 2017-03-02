@@ -1,0 +1,4 @@
+amulet
+juju
+juju-deployer
+requests

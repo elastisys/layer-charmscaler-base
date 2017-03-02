@@ -1,0 +1,17 @@
+version: "2"
+
+services:
+  charmpool:
+    container_name: "charmpool"
+    extends:
+      file: "../docker-compose-base.yml"
+      service: "_base"
+    image: "elastisys/charmpool:{{ tag }}"
+    environment:
+      - "API_ENDPOINT={{ juju_api_endpoint }}"
+      - "MODEL_UUID={{ juju_model_uuid }}"
+      - "USERNAME={{ juju_username }}"
+      - "PASSWORD={{ juju_password }}"
+      - "APPLICATION={{ application }}"
+      - "PORT=80"
+      - "REFRESH_INTERVAL={{ juju_refresh_interval }}"

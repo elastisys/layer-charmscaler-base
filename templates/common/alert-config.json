@@ -1,0 +1,24 @@
+"duplicateSuppression": { "time": 2, "unit": "hours" },
+"smtp": [
+    {
+        "subject": "[{{ name }}] alert",
+        "recipients": [
+            "{{ alert.recipients|join('","') }}"
+        ],
+        "sender": "{{ alert.sender }}",
+        "severityFilter": "{{ alert.levels|join('|') }}",
+        "smtpClientConfig": {
+            "smtpHost": "{{ alert.smtp.host }}",
+            "smtpPort": {{ alert.smtp.port }},
+            "useSsl": {{ alert.smtp.ssl|lower }},
+            {% if alert.smtp.username or alert.smtp.password %}
+            "authentication": {
+                "username": "{{ alert.smtp.username }}",
+                "password": "{{ alert.smtp.password }}"
+            }
+            {% else %}
+            "authentication": null
+            {% endif %}
+        }
+    }
+]

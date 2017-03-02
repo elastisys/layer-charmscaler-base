@@ -1,0 +1,9 @@
+version: "2"
+
+services:
+  _base:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ "$(action-get operation)" == "start" ]; then
+    actions/smtpserver.py &
+    pid=$!
+
+    # Give the server some time to start up
+    sleep 3
+
+    # If the server is still running we assume everything works
+    kill -0 $pid > /dev/null 2>&1
+else
+    actions/smtpserver.py
+fi
+
+if [ "$?" != "0" ]; then
+    message="SMTP server error, check the Juju logs"
+    action-fail "$message"
+    juju-log -l ERROR "$message"
+fi

@@ -1,0 +1,13 @@
+smtpserver:
+  description: Run a local SMTP server (for test purposes)
+  params:
+    operation:
+      type: string
+    port:
+      type: integer
+docker-inspect:
+  description: Execute and retrieve output from `docker inpect`
+  params:
+    container:
+      type: string
+      description: Container name or ID

@@ -1,0 +1,150 @@
+options:
+  name:
+    type: string
+    default: CharmScaler
+    description: |
+      The name of the service - mainly shows up in the alert e-mails
+
+      Also useful to distinguish between multiple CharmScaler charms
+  juju_api_endpoint:
+    type: string
+    default: null
+    description: |
+      Juju controller API endpoint
+  juju_model_uuid:
+    type: string
+    default: null
+    description: |
+      Juju model UUID
+  juju_username:
+    type: string
+    default: null
+    description: |
+      Juju account username
+  juju_password:
+    type: string
+    default: null
+    description: |
+      Juju account password
+  juju_refresh_interval:
+    type: int
+    default: 5
+    description: |
+      How often the charmscaler should sync against the Juju model.
+  port_autoscaler:
+    type: int
+    default: 8097
+    description: |
+      Port which the Autoscaler API should be served on.
+  metric_poll_interval:
+    type: int
+    default: 10
+    description: |
+      Seconds between polls for new metric values
+  metric_data_settling_interval:
+    type: int
+    default: 15
+    description: |
+      The minimum age (in seconds) of requested data points. When requesting
+      recent aggregate metric data points, there is always a risk of seeing
+      partial/incomplete results before metric values from all sources have
+      been registered. The value to set for this field depends on the reporting
+      frequency of monitoring agents, but as a general rule-of-thumb, this
+      value can be set to be about 1.5 times the length of the
+      reporting-interval for monitoring agents.
+  scaling_units_min:
+    type: int
+    default: 1
+    description: |
+      Minimum amount of units to keep in pool
+  scaling_units_max:
+    type: int
+    default: 4
+    description: |
+      Maximum amount of units to keep in pool
+  scaling_interval:
+    type: int
+    default: 10
+    description: |
+      Seconds between each scaling decision
+  scaling_cpu_max:
+    type: int
+    default: 80
+    description: |
+      CPU usage threshold at which the number of units should be scaled up.
+  scaling_cpu_min:
+    type: int
+    default: 20
+    description: |
+      CPU threshold where the load is considered low enough to scale down the
+      number of units.
+  scaling_period_upscale:
+    type: int
+    default: 60
+    description: |
+      Number of seconds that the CPU usage needs to be higher than the
+      threshold before scaling up.
+  scaling_period_downscale:
+    type: int
+    default: 120
+    description: |
+      Number of seconds that the CPU usage needs to be lower than the threshold
+      before scaling down.
+  scaling_cooldown:
+    type: int
+    default: 300
+    description: |
+      Time (in seconds) before making another scaling decision from the time of
+      the last up- or downscale. This is useful to prevent extra resizes due to
+      slow teardowns or, in perticular, upstarts.
+  alert_enabled:
+    type: boolean
+    default: false
+    description: |
+      Toggle e-mail alerts on/off
+  alert_smtp_host:
+    type: string
+    default: null
+    description: SMTP hostname
+  alert_smtp_port:
+    type: int
+    default: 25
+    description: SMTP port
+  alert_smtp_ssl:
+    type: boolean
+    default: false
+    description: |
+      Use SSL when connecting to SMTP host
+  alert_smtp_username:
+    type: string
+    default: null
+    description: |
+      Username to auth with the SMTP server
+  alert_smtp_password:
+    type: string
+    default: null
+    description: |
+      Password to auth with the SMTP server
+  alert_sender:
+    type: string
+    default: null
+    description: |
+      E-mail address that alert mails should be sent from
+  alert_receivers:
+    type: string
+    default: null
+    description: |
+      Space separated list of e-mail addresses that should recieve alerts
+  alert_levels:
+    # TODO: Fix @ enum-support
+    type: string
+    default: INFO NOTICE WARN ERROR FATAL
+    description: |
+      Alert levels that should trigger alert mails to be sent out
+  charmpool_url:
+    type: string
+    default: http://charmpool:80
+    description: |
+      URL to the Charmpool component. By default both the autoscaler and the
+      pool is run in the same Docker network and will reach eachother by their
+      local hostnames.
