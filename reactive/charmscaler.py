@@ -43,8 +43,10 @@ def _execute(method, *args, classinfo=None, pre_healthcheck=True, **kwargs):
     """
     try:
         if pre_healthcheck:
-            _execute("healthcheck", classinfo=DockerComponent,
-                     pre_healthcheck=False)
+            healthy = _execute("healthcheck", classinfo=DockerComponent,
+                               pre_healthcheck=False)
+            if not healthy:
+                return False
 
         for component in components:
             if not classinfo or isinstance(component, classinfo):
