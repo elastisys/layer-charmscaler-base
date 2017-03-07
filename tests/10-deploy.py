@@ -1,60 +1,17 @@
 #!/usr/bin/env python3.5
 import amulet
-from amulet_utils import attach_resource, has_resource
+from amulet_utils import attach_resource, get_juju_credentials
 import asyncio
 import json
 from juju.errors import JujuAPIError
 from juju.model import Model
-from juju.client.connection import JujuData
 import logging
-import os
 import re
-import requests
 import unittest
 
 log = logging.getLogger(__name__)
 
 SCALABLE_CHARM = "ubuntu"
-
-
-def download_resource(url):
-    resource_path = "/tmp/charmscaler-docker-images.tar"
-
-    r = requests.get(url, stream=True)
-    r.raise_for_status()
-
-    log.info("Downloading resource {} to {}".format(url, resource_path))
-
-    with open(resource_path, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
-
-    return resource_path
-
-
-def _get_juju_credentials():
-    jujudata = JujuData()
-
-    controller_name = jujudata.current_controller()
-
-    controller = jujudata.controllers()[controller_name]
-    endpoint = controller["api-endpoints"][0]
-
-    models = jujudata.models()[controller_name]
-    model_name = models["current-model"]
-    model_uuid = models["models"][model_name]["uuid"]
-
-    accounts = jujudata.accounts()[controller_name]
-    username = accounts["user"]
-    password = accounts.get("password")
-
-    return {
-        "endpoint": endpoint,
-        "model_uuid": model_uuid,
-        "username": username,
-        "password": password
-    }
 
 
 class TestCharm(unittest.TestCase):
@@ -64,7 +21,7 @@ class TestCharm(unittest.TestCase):
 
         cls.d = amulet.Deployment(series="xenial")
 
-        credentials = _get_juju_credentials()
+        credentials = get_juju_credentials()
 
         cls.d.add("charmscaler")
 
@@ -95,22 +52,7 @@ class TestCharm(unittest.TestCase):
             message = "Environment wasn't stood up in time"
             amulet.raise_status(amulet.SKIP, msg=message)
 
-        if not has_resource("charmscaler", "docker-images"):
-            resource = os.getenv("CHARMSCALER_RESOURCE")
-            if resource:
-                try:
-                    cls.resource_path = download_resource(resource)
-                except requests.exceptions.RequestException:
-                    if os.path.isfile(resource):
-                        cls.resource_path = resource
-                    else:
-                        message = "resource '{}' not found".format(resource)
-                        amulet.raise_status(amulet.FAIL, msg=message)
-            else:
-                url = ("https://api.jujucharms.com/charmstore/v5/"
-                       "~elastisys/charmscaler/resource/docker-images")
-                cls.resource_path = download_resource(url)
-            attach_resource("charmscaler", "docker-images", cls.resource_path)
+        attach_resource("charmscaler", "docker-images")
 
         try:
             cls.d.sentry.wait_for_messages({"charmscaler": "Available"})
