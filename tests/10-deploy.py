@@ -52,7 +52,8 @@ class TestCharm(unittest.TestCase):
             message = "Environment wasn't stood up in time"
             amulet.raise_status(amulet.SKIP, msg=message)
 
-        attach_resource("charmscaler", "docker-images")
+        for resource in ["autoscaler", "charmpool"]:
+            attach_resource("charmscaler", resource)
 
         try:
             cls.d.sentry.wait_for_messages({"charmscaler": "Available"})

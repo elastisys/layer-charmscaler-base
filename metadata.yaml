@@ -22,6 +22,9 @@ requires:
   db-api:
     interface: influxdb-api
 resources:
-  docker-images:
+  autoscaler:
     type: file
-    filename: docker-images.tar
+    filename: autoscaler.tar
+  charmpool:
+    type: file
+    filename: charmpool.tar

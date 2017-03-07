@@ -106,18 +106,20 @@ def install():
 
     docker = Docker()
 
-    msg = "Loading Docker images from docker-images resource"
-    log(msg)
-    status_set("maintenance", msg)
-    resource_name = "docker-images"
-    path = resource_get(resource_name)
-    if not path:
-        msg = "Missing resource: {}".format(resource_name)
-        log(msg, level=ERROR)
-        status_set("blocked", msg)
-        return
+    for component in components:
+        msg = "Loading Docker image from {} resource".format(component)
+        log(msg)
+        status_set("maintenance", msg)
 
-    docker.load(path)
+        path = resource_get(str(component))
+
+        if not path:
+            msg = "Missing resource: {}".format(component)
+            log(msg, level=ERROR)
+            status_set("blocked", msg)
+            return
+
+        docker.load(path)
 
     set_state("charmscaler.installed")
 
