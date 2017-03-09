@@ -15,7 +15,7 @@ from reactive.component import (ConfigComponent, DockerComponent,
 from reactive.config import ConfigurationException
 
 AUTOSCALER_VERSION = "5.0.1"
-CHARMPOOL_VERSION = "0.0.2"
+CHARMPOOL_VERSION = "0.0.3"
 
 cfg = config()
 
