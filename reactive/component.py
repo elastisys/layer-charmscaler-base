@@ -110,10 +110,14 @@ class DockerComponent(Component):
 
             self.compose_config.commit()
 
-            self._up()
+        # To take accidental shutdowns or container changes into account,
+        # always run docker-compose up even though the compose config is
+        # unchanged.
+        self._up()
 
-            # Healthcheck after the Docker containers have been (re)started
-            self.healthcheck()
+        # Healthcheck Docker containers to make sure that they are working
+        # as they should after they have been (re)started.
+        self.healthcheck()
 
 
 class HTTPComponent(Component):
