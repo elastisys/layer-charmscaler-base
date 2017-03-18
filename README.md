@@ -21,11 +21,11 @@ where they are consumed by the CharmScaler.
 The CharmScaler is available both free-of-charge and as a subscription service.
 The free version comes with a size restriction which currently limits the size
 of the scaled application to four units. Subscription users will see no such
-size restrictions. For more details refer to the [Subscription](#Subscription)
+size restrictions. For more details refer to the [Subscription](#subscription)
 section below.
 
 If you are eager to try out the CharmScaler, head directly to the
-[Quickstart](#Quickstart) section. If you want to learn more about the
+[Quickstart](#quickstart) section. If you want to learn more about the
 Elastisys autoscaler, read on ...
 
 # Introducing the Elastisys Autoscaler
@@ -86,6 +86,22 @@ configuration defaults) will let you start scaling your charm right away. For a
 description of the CharmScaler and further details on its configuration, refer
 to the sections below.
 
+#### Juju credentials
+
+At the time of writing there is no easy way to give a charm special Juju access
+levels. Therefore, for the CharmScaler to be able to scale units you need to
+give it the necessary credentials via the charm config.
+
+Create a user and grant it model write access
+
+    juju add-user [username] && juju grant [username] write [model]
+
+*To set the password, execute the `juju register` command line given to you*
+
+Get the Juju API address and model UUID
+
+    juju show-controller
+
 Minimal config.yaml example
 
     charmscaler:
@@ -93,6 +109,8 @@ Minimal config.yaml example
       juju_model_uuid: "[uuid]"
       juju_username: "[username]"
       juju_password: "[password]"
+
+#### Deploy
 
 Deploy and relate the charms
 
@@ -221,14 +239,6 @@ Due to missing support for the Docker LXC profile in Juju you need to apply it
 manually.
 
 See: https://bugs.launchpad.net/juju/+bug/1552815
-
-#### InfluxDB co-location
-
-The [Docker layer](https://github.com/juju-solutions/layer-docker) currently
-does not support installing Docker Compose in a virtual environment. Until
-[this is supported](https://github.com/juju-solutions/layer-docker/issues/98)
-InfluxDB cannot be co-located with the CharmScaler charm because of dependency
-conflicts.
 
 -----------------------
 
