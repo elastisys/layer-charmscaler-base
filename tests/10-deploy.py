@@ -34,12 +34,12 @@ class TestCharm(unittest.TestCase):
             "scaling_units_max": 1
         })
 
-        cls.d.add("influxdb", charm="cs:~chris.macnaughton/influxdb")
-        cls.d.add("telegraf")
+        cls.d.add("influxdb", charm="cs:~chris.macnaughton/influxdb-7")
+        cls.d.add("telegraf", charm="cs:telegraf-2")
         cls.d.add(SCALABLE_CHARM)
 
-        cls.d.relate("charmscaler:db-api", "influxdb:api")
-        cls.d.relate("telegraf:influxdb-api", "influxdb:api")
+        cls.d.relate("charmscaler:db-api", "influxdb:query")
+        cls.d.relate("telegraf:influxdb-api", "influxdb:query")
         cls.d.relate("telegraf:juju-info",
                      "{}:juju-info".format(SCALABLE_CHARM))
         cls.d.relate("charmscaler:scalable-charm",

@@ -114,13 +114,13 @@ Minimal config.yaml example
 
 Deploy and relate the charms
 
-    juju deploy cs:~elastisys/charmscaler --config=config.yaml
-    juju deploy cs:~chris.macnaughton/influxdb
-    juju deploy telegraf
+    juju deploy charmscaler --config=config.yaml
+    juju deploy cs:~chris.macnaughton/influxdb-7
+    juju deploy telegraf-2
     juju deploy [charm]
 
-    juju relate charmscaler:db-api influxdb:api
-    juju relate telegraf:influxdb-api influxdb:api
+    juju relate charmscaler:db-api influxdb:query
+    juju relate telegraf:influxdb-api influxdb:query
     juju relate telegraf:juju-info [charm]:juju-info
     juju relate charmscaler:juju-info [charm]:juju-info
 
