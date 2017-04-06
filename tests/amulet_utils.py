@@ -47,8 +47,8 @@ def _download_resource(url, target_path):
 
 def _get_resource(charm, resource):
     env = "{}_RESOURCE_{}".format(charm.upper(), resource.upper())
-    default_url = ("https://api.jujucharms.com/charmstore/v5/"
-                   "~elastisys/{}/resource/{}".format(charm, resource))
+    default_url = ("https://api.jujucharms.com/charmstore/v5/~elastisys/"
+                   "{}/resource/{}?channel=edge".format(charm, resource))
     resource_path = os.getenv(env, default_url)
 
     if os.path.isfile(resource_path):
