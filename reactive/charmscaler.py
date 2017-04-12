@@ -6,7 +6,8 @@ from charmhelpers.core.hookenv import (application_version_set, config, log,
                                        remote_service_name, resource_get,
                                        status_set, ERROR)
 from charms.docker import Docker
-from charms.reactive import hook, remove_state, set_state, when, when_not
+from charms.reactive import (all_states, hook, remove_state, set_state, when,
+                             when_all, when_not)
 
 from reactive.autoscaler import Autoscaler
 from reactive.charmpool import Charmpool
@@ -23,6 +24,23 @@ components = [
     Charmpool(cfg, tag=CHARMPOOL_VERSION),
     Autoscaler(cfg, tag=AUTOSCALER_VERSION)
 ]
+
+# All CharmScaler states, each state depends on the states before it
+states = [
+    "charmscaler.installed",
+    "charmscaler.composed",
+    "charmscaler.initialized",
+    "charmscaler.configured",
+    "charmscaler.started",
+    "charmscaler.available"
+]
+
+
+def get_state_dependencies(state):
+    """
+    Returns all of the states that this state depends on
+    """
+    return states[:states.index(state)]
 
 
 def _execute(method, *args, classinfo=None, pre_healthcheck=True, **kwargs):
@@ -62,8 +80,6 @@ def _execute(method, *args, classinfo=None, pre_healthcheck=True, **kwargs):
     except ConfigurationException as err:
         msg = "Error while configuring {}: {}".format(err.config.filename, err)
     except DockerComponentUnhealthy as err:
-        # An unhealthy component should be seen as not composed
-        _reset()
         msg = str(err)
 
     status_set("blocked", msg)
@@ -124,27 +140,34 @@ def install():
     set_state("charmscaler.installed")
 
 
-def _reset():
-    """
-    Reset the CharmScaler to a pre-composed state.
-    """
-    remove_state("charmscaler.composed")
-    remove_state("charmscaler.configured")
-    remove_state("charmscaler.started")
-    remove_state("charmscaler.available")
-
-
 @hook("upgrade-charm")
 def reinstall():
     """
     Reinstall the CharmScaler on the upgrade-charm hook.
     """
     remove_state("charmscaler.installed")
-    _reset()
-    install()
+    remove_state("charmscaler.composed")
+    remove_state("charmscaler.configured")
+    remove_state("charmscaler.started")
+    remove_state("charmscaler.available")
 
 
-@when("charmscaler.installed")
+@hook("config-changed")
+def reconfigure():
+    remove_state("charmscaler.composed")
+    remove_state("charmscaler.configured")
+    remove_state("charmscaler.available")
+
+
+@hook("update-status")
+def update_status():
+    # We only update the status if we're up and running
+    if all_states(*states):
+        _execute("healthcheck", classinfo=DockerComponent,
+                 pre_healthcheck=False)
+
+
+@when_all(*get_state_dependencies("charmscaler.composed"))
 @when_not("scalable-charm.available")
 def wait_for_scalable_charm():
     """
@@ -153,21 +176,18 @@ def wait_for_scalable_charm():
     status_set("blocked", "Waiting for relation to scalable charm")
 
 
-@when("charmscaler.installed")
+@when_all(*get_state_dependencies("charmscaler.composed"))
+@when_not("charmscaler.composed")
 @when("scalable-charm.available")
 def compose(scale_relation):
     """
     Start all of the Docker components. If the Compose manifest has changed the
-    affected Docker containers will be recreated. This is done at every run.
+    affected Docker containers will be recreated.
 
     :param scale_relation: Relation object for the charm that is going to be
                            autoscaled.
     :type scale_relation: JujuInfoClient
     """
-
-    # Reset to re-check configuration and return to available state.
-    _reset()
-
     class ComposeException(Exception):
         pass
 
@@ -196,7 +216,7 @@ def compose(scale_relation):
         log(msg, level=ERROR)
 
 
-@when("charmscaler.composed")
+@when_all(*get_state_dependencies("charmscaler.initialized"))
 @when_not("charmscaler.initialized")
 def initialize():
     """
@@ -206,7 +226,7 @@ def initialize():
         set_state("charmscaler.initialized")
 
 
-@when("charmscaler.initialized")
+@when_all(*get_state_dependencies("charmscaler.configured"))
 @when_not("db-api.available")
 def waiting_for_influxdb():
     """
@@ -215,10 +235,9 @@ def waiting_for_influxdb():
     status_set("blocked", "Waiting for InfluxDB relation")
 
 
-@when("charmscaler.composed")
-@when("charmscaler.initialized")
-@when("db-api.available")
+@when_all(*get_state_dependencies("charmscaler.configured"))
 @when_not("charmscaler.configured")
+@when("db-api.available")
 def configure(influxdb):
     """
     Configure all of the charm config components. This is done at every run,
@@ -228,7 +247,7 @@ def configure(influxdb):
         set_state("charmscaler.configured")
 
 
-@when("charmscaler.configured")
+@when_all(*get_state_dependencies("charmscaler.started"))
 @when_not("charmscaler.started")
 def start():
     """
@@ -243,10 +262,10 @@ def stop():
     Stop the autoscaler.
     """
     _execute("stop", classinfo=Autoscaler)
-    _reset()
 
 
-@when("charmscaler.started")
+@when_all(*get_state_dependencies("charmscaler.available"))
+@when_not("charmscaler.available")
 def available():
     """
     We're good to go!
