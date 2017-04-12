@@ -87,6 +87,9 @@ class DockerComponent(Component):
     def compose(self):
         """
         Generate, render and (re)start the component's Docker Compose services.
+
+        If the content of the compose file is unchanged after it has been
+        rendered nothing happens.
         """
         # TODO Would be nice to have support for multiple compose files and/or
         #      the project flag in charms.docker.
@@ -98,26 +101,20 @@ class DockerComponent(Component):
             compose_env.extend(lambda: {"name": "charmscaler"})
             compose_env.render()
 
-        # The upgrade-charm hook requires files to be rendered again - make
-        # sure the compose files exists.
-        if (not self.compose_config.exists() or
-                self.compose_config.has_changed()):
-            msg = "Rendering Docker Compose manifest for {}".format(self)
+        self.compose_config.render()
+
+        if self.compose_config.has_changed():
+            msg = "(Re)starting Docker Compose service: {}".format(self)
             status_set("maintenance", msg)
             log(msg)
 
-            self.compose_config.render()
+            self._up()
+
+            # Healthcheck Docker containers to make sure that they are working
+            # as they should after they have been (re)started.
+            self.healthcheck()
 
             self.compose_config.commit()
-
-        # To take accidental shutdowns or container changes into account,
-        # always run docker-compose up even though the compose config is
-        # unchanged.
-        self._up()
-
-        # Healthcheck Docker containers to make sure that they are working
-        # as they should after they have been (re)started.
-        self.healthcheck()
 
 
 class HTTPComponent(Component):
@@ -215,19 +212,20 @@ class ConfigComponent(HTTPComponent):
         """
         Generate, render and push a new config to the component.
 
-        If the config is unchanged nothing happens.
+        If the content of the config file is unchanged after it has been
+        rendered nothing happens.
 
         On errors, :class:`config.ConfigurationException` is raised.
 
         :raises: config.ConfigurationException,
                  requests.exceptions.RequestException
         """
-        if not self.config.exists() or self.config.has_changed():
+        self.config.render()
+
+        if self.config.has_changed():
             msg = "Configuring {}".format(self)
             status_set("maintenance", msg)
             log(msg)
-
-            self.config.render()
 
             with self.config.open() as config_file:
                 self.send_request("configure", method="POST",

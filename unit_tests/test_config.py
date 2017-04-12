@@ -30,8 +30,15 @@ class TestConfig(unittest.TestCase):
             "more": "stuff"
         })
 
-    def test_has_changed(self):
+    @mock.patch("reactive.config.open", new_callable=mock.mock_open)
+    def test_has_changed(self, mock_open):
         cfg = Config("test-config", "path")
+
+        # Rather than having to render a file we fake the config file reads
+        # by returning the config content
+        def _fake_read():
+            return str(cfg._config).encode("utf-8")
+        mock_open.return_value.read.side_effect = _fake_read
 
         # Initial config
         self.assertTrue(cfg.has_changed())

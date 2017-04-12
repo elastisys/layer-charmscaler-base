@@ -94,13 +94,15 @@ class Config:
         """
         Check if this config has changed in the unit data store.
         """
-        return data_changed(self.unitdata_key, self._config)
+        with self.open() as config_file:
+            return data_changed(self.unitdata_key, config_file.read())
 
     def commit(self):
         """
         Commit the current config to the unit data store.
         """
-        data_commit(self.unitdata_key, self._config)
+        with self.open() as config_file:
+            data_commit(self.unitdata_key, config_file.read())
 
     def render(self):
         """

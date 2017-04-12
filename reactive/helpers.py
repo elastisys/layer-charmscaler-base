@@ -1,35 +1,32 @@
 import hashlib
-import json
 import logging
 
 from charmhelpers.core import unitdata
 from charmhelpers.core.hookenv import log as juju_log
 
 
-def data_changed(data_id, data, hash_type='md5'):
+def data_changed(data_id, data, hash_type="md5"):
     """
     Similar to the data_changed function in charms.reactive.helpers but without
     the kv().set step. Usable when you don't want the data to be updated until
     later on. For example to make sure the data is only updated when a task has
     finished successfully.
     """
-    key = 'reactive.data_changed.%s' % data_id
+    key = "reactive.data_changed.{}".format(data_id)
     alg = getattr(hashlib, hash_type)
-    serialized = json.dumps(data, sort_keys=True).encode('utf8')
     old_hash = unitdata.kv().get(key)
-    new_hash = alg(serialized).hexdigest()
+    new_hash = alg(data).hexdigest()
     return old_hash != new_hash
 
 
-def data_commit(data_id, data, hash_type='md5'):
+def data_commit(data_id, data, hash_type="md5"):
     """
     Used in conjunction with data_changed() to update the changes in the
     datastore.
     """
-    key = 'reactive.data_changed.%s' % data_id
+    key = "reactive.data_changed.{}".format(data_id)
     alg = getattr(hashlib, hash_type)
-    serialized = json.dumps(data, sort_keys=True).encode('utf8')
-    new_hash = alg(serialized).hexdigest()
+    new_hash = alg(data).hexdigest()
     unitdata.kv().set(key, new_hash)
 
 

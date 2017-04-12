@@ -2,7 +2,6 @@
 
 from requests.exceptions import RequestException
 import requests_mock
-import tempfile
 import unittest
 import unittest.mock as mock
 
@@ -73,36 +72,34 @@ class TestConfigComponent(unittest.TestCase):
 
     @requests_mock.mock()
     def test_configure(self, mock_req):
-        with tempfile.NamedTemporaryFile() as config_file:
-            self.component.config.path = config_file.name
-            url = self.component._get_url("configure")
-            mock_req.post(url, status_code=200)
+        url = self.component._get_url("configure")
+        mock_req.post(url, status_code=200)
 
-            # Normal configuration procedure when config has changed
-            self.component.config.has_changed.return_value = True
-            self.component.configure()
-            self.assertTrue(self.component.config.has_changed.called)
-            self.assertTrue(self.component.config.render.called)
-            self.assertTrue(self.component.config.commit.called)
-            self.assertEqual(mock_req.call_count, 1)
+        # Normal configuration procedure when config has changed
+        self.component.config.has_changed.return_value = True
+        self.component.configure()
+        self.assertTrue(self.component.config.render.called)
+        self.assertTrue(self.component.config.has_changed.called)
+        self.assertTrue(self.component.config.commit.called)
+        self.assertEqual(mock_req.call_count, 1)
 
-            self.component.config.reset_mock()
+        self.component.config.reset_mock()
 
-            # Nothing should happen if the config has not changed
-            self.component.config.has_changed.return_value = False
-            self.component.configure()
-            self.assertTrue(self.component.config.has_changed.called)
-            self.assertFalse(self.component.config.render.called)
-            self.assertFalse(self.component.config.commit.called)
-            self.assertEqual(mock_req.call_count, 1)
+        # No request should be sent if the config has not changed
+        self.component.config.has_changed.return_value = False
+        self.component.configure()
+        self.assertTrue(self.component.config.render.called)
+        self.assertTrue(self.component.config.has_changed.called)
+        self.assertFalse(self.component.config.commit.called)
+        self.assertEqual(mock_req.call_count, 1)
 
-            self.component.config.reset_mock()
+        self.component.config.reset_mock()
 
-            # Invalid config
-            self.component.config.has_changed.return_value = True
-            mock_req.post(url, status_code=400)
-            self.assertRaises(RequestException, self.component.configure)
-            self.assertEqual(mock_req.call_count, 2)
+        # Invalid config
+        self.component.config.has_changed.return_value = True
+        mock_req.post(url, status_code=400)
+        self.assertRaises(RequestException, self.component.configure)
+        self.assertEqual(mock_req.call_count, 2)
 
 
 if __name__ == "__main__":
