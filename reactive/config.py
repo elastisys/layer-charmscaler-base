@@ -55,21 +55,23 @@ class Config:
     :type name: str
     :var filename: Filename of the config template file
     :vartype filename: str
-    :var path: Path to the config file
-    :vartype path: str
+    :var tmpl_path: Path to the config template file
+    :vartype tmpl_path: str
+    :var target: Path to the rendered config file
+    :vartype target: str
     """
-    def __init__(self, filename, path, target=None):
+    def __init__(self, filename, tmpl_path, target=None):
         self._config = {}
 
         self.filename = filename
-        self.path = path
-        self.template = os.path.join(self.path, self.filename)
+        self.tmpl_path = tmpl_path
+        self.template = os.path.join(self.tmpl_path, self.filename)
         if target:
             self.target = os.path.join(charm_dir(), CONFIG_PATH, target)
         else:
             self.target = os.path.join(charm_dir(), CONFIG_PATH, self.template)
 
-        self.unitdata_key = "charmscaler.config.{}.{}".format(self.path,
+        self.unitdata_key = "charmscaler.config.{}.{}".format(self.tmpl_path,
                                                               self.filename)
 
     def __str__(self):
