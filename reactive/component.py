@@ -114,6 +114,8 @@ class DockerComponent(Component):
         # as they should after they have been (re)started.
         self.healthcheck()
 
+    def compose_stop(self):
+        self._compose.stop()
 
 
 class HTTPComponent(Component):

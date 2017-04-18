@@ -176,6 +176,16 @@ def wait_for_scalable_charm():
     status_set("blocked", "Waiting for relation to scalable charm")
 
 
+@hook("scalable-charm-relation-broken")
+def scalable_charm_lost(scale_relation):
+    stop()
+
+    remove_state("charmscaler.composed")
+    remove_state("charmscaler.configured")
+    remove_state("charmscaler.started")
+    remove_state("charmscaler.available")
+
+
 @when_all(*get_state_dependencies("charmscaler.composed"))
 @when_not("charmscaler.composed")
 @when("scalable-charm.available")
@@ -259,9 +269,10 @@ def start():
 
 def stop():
     """
-    Stop the autoscaler.
+    Stop the autoscaler and stop all Docker containers.
     """
     _execute("stop", classinfo=Autoscaler)
+    _execute("compose_stop", classinfo=DockerComponent)
 
 
 @when_all(*get_state_dependencies("charmscaler.available"))
