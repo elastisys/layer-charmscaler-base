@@ -51,6 +51,8 @@ def _get_resource(charm, resource):
                    "{}/resource/{}?channel=edge".format(charm, resource))
     resource_path = os.getenv(env, default_url)
 
+    log.info("{} resource: {} = {}".format(charm, resource, resource_path))
+
     if os.path.isfile(resource_path):
         return resource_path
 
