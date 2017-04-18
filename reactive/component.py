@@ -62,6 +62,10 @@ class DockerComponent(Component):
         self.compose_config = Config("docker-compose.yml", name)
         self.compose_config.extend(lambda: {"tag": tag})
 
+    @property
+    def _compose(self):
+        return Compose(os.path.dirname(str(self.compose_config)))
+
     @backoff.on_exception(backoff.constant, DockerComponentUnhealthy,
                           max_tries=HEALTH_RETRY_LIMIT, jitter=None)
     def healthcheck(self):
@@ -80,11 +84,7 @@ class DockerComponent(Component):
         if not Docker().healthcheck(self.name):
             raise DockerComponentUnhealthy(self)
 
-    def _up(self):
-        compose = Compose(os.path.dirname(str(self.compose_config)))
-        compose.up()
-
-    def compose(self):
+    def compose_up(self):
         """
         Generate, render and (re)start the component's Docker Compose services.
 
@@ -103,18 +103,17 @@ class DockerComponent(Component):
 
         self.compose_config.render()
 
-        if self.compose_config.has_changed():
-            msg = "(Re)starting Docker Compose service: {}".format(self)
-            status_set("maintenance", msg)
-            log(msg)
+        # TODO This will show up even though a restart might not have occured.
+        msg = "(Re)starting Docker Compose service: {}".format(self)
+        status_set("maintenance", msg)
+        log(msg)
 
-            self._up()
+        self._compose.up()
 
-            # Healthcheck Docker containers to make sure that they are working
-            # as they should after they have been (re)started.
-            self.healthcheck()
+        # Healthcheck Docker containers to make sure that they are working
+        # as they should after they have been (re)started.
+        self.healthcheck()
 
-            self.compose_config.commit()
 
 
 class HTTPComponent(Component):

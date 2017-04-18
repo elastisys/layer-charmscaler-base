@@ -205,7 +205,7 @@ def compose(scale_relation):
 
         application = remote_service_name(scale_relation_ids[0])
 
-        if _execute("compose", cfg, application, classinfo=DockerComponent,
+        if _execute("compose_up", cfg, application, classinfo=DockerComponent,
                     pre_healthcheck=False):
             set_state("charmscaler.composed")
             return

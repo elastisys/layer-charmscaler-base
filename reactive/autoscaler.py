@@ -26,14 +26,14 @@ class Autoscaler(DockerComponent, ConfigComponent):
             "stop": "autoscaler/instances/{}/stop".format(self.unit_id)
         }, tag=tag)
 
-    def compose(self, *args, **kwargs):
+    def compose_up(self, *args, **kwargs):
         """
         Generates and runs the Autoscaler's Docker compose file.
 
         :raises: component.DockerComponentUnhealthy
         """
         self.compose_config.extend(lambda: {"port": self.port})
-        super().compose()
+        super().compose_up()
 
     def initialize(self):
         """

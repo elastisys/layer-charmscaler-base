@@ -14,14 +14,14 @@ class Charmpool(DockerComponent):
     def __init__(self, cfg, tag):
         super().__init__("charmpool", tag=tag)
 
-    def compose(self, cfg, application):
+    def compose_up(self, cfg, application):
         """
         Generates and runs the Charmpool's Docker compose file.
 
         :raises: component.DockerComponentUnhealthy
         """
         self.compose_config.extend(compose_config, cfg, application)
-        super().compose()
+        super().compose_up()
 
 
 def compose_config(cfg, application):

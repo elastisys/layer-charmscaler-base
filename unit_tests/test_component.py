@@ -19,27 +19,15 @@ class TestDockerComponent(unittest.TestCase):
         pass
 
     @mock.patch("reactive.component.Config")
-    def test_compose(self, mock_config):
-        self.component._up = mock.MagicMock()
+    @mock.patch("reactive.component.Compose")
+    def test_compose_up(self, mock_compose, mock_config):
         self.component.healthcheck = mock.MagicMock()
 
-        # Normal configuration procedure when config has changed
         self.component.compose_config.has_changed.return_value = True
-        self.component.compose()
-        self.assertTrue(self.component.compose_config.has_changed.called)
+        self.component.compose_up()
         self.assertTrue(self.component.compose_config.render.called)
-        self.assertTrue(self.component.compose_config.commit.called)
-        self.assertTrue(self.component._up.called)
+        self.assertTrue(self.component._compose.up.called)
         self.assertTrue(self.component.healthcheck.called)
-
-        # Unchanged compose configuration
-        self.component.compose_config.has_changed.return_value = False
-        self.component.compose()
-        self.assertTrue(self.component.compose_config.has_changed.called)
-        self.assertTrue(self.component.compose_config.render.not_called)
-        self.assertTrue(self.component.compose_config.commit.not_called)
-        self.assertTrue(self.component._up.not_called)
-        self.assertTrue(self.component.healthcheck.not_called)
 
 
 class TestHTTPComponent(unittest.TestCase):
