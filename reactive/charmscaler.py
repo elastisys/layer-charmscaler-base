@@ -152,7 +152,7 @@ def reinstall():
     remove_state("charmscaler.available")
 
 
-@hook("config-changed")
+@when("config.changed")
 def reconfigure():
     remove_state("charmscaler.composed")
     remove_state("charmscaler.configured")
