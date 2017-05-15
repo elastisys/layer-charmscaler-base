@@ -238,7 +238,7 @@ def initialize():
 
 @when_all(*get_state_dependencies("charmscaler.configured"))
 @when_not("db-api.available")
-def waiting_for_influxdb():
+def wait_for_influxdb():
     """
     Wait for relation to InfluxDB charm.
     """
