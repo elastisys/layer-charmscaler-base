@@ -11,8 +11,7 @@ from charms.reactive import (all_states, hook, remove_state, set_state, when,
 
 from reactive.autoscaler import Autoscaler
 from reactive.charmpool import Charmpool
-from reactive.component import (ConfigComponent, DockerComponent,
-                                DockerComponentUnhealthy)
+from reactive.component import DockerComponent, DockerComponentUnhealthy
 from reactive.config import ConfigurationException
 
 AUTOSCALER_VERSION = "5.0.1"
@@ -250,10 +249,10 @@ def wait_for_influxdb():
 @when("db-api.available")
 def configure(influxdb):
     """
-    Configure all of the charm config components. This is done at every run,
-    however, if the config is unchanged nothing happens.
+    Configure the autoscaler. This is done at every run, however, if the config
+    is unchanged nothing happens.
     """
-    if _execute("configure", cfg, influxdb, classinfo=ConfigComponent):
+    if _execute("configure", cfg, influxdb, classinfo=Autoscaler):
         set_state("charmscaler.configured")
 
 
