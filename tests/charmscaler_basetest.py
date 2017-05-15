@@ -7,8 +7,6 @@ from juju import loop
 from juju.errors import JujuAPIError
 from juju.model import Model
 import logging
-import re
-import unittest
 
 log = logging.getLogger(__name__)
 
@@ -16,22 +14,20 @@ SCALABLE_APP = "ubuntu"
 SCALABLE_CHARM = "cs:ubuntu-10"
 
 
-class TestCharm(unittest.TestCase):
+class BaseTest:
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, charmscaler_charm):
         cls.d = amulet.Deployment(series="xenial")
 
-        credentials = get_juju_credentials()
+        cls.d.add("charmscaler", charm=charmscaler_charm)
 
-        cls.d.add("charmscaler")
+        credentials = get_juju_credentials()
 
         cls.d.configure("charmscaler", {
             "juju_api_endpoint": credentials["endpoint"],
             "juju_model_uuid": credentials["model_uuid"],
             "juju_username": credentials["username"],
             "juju_password": credentials["password"],
-            "scaling_units_min": 1,
-            "scaling_units_max": 1
         })
 
         cls.d.add("influxdb", charm="cs:~chris.macnaughton/influxdb-7")
@@ -55,8 +51,13 @@ class TestCharm(unittest.TestCase):
         for resource in ["autoscaler", "charmpool"]:
             attach_resource("charmscaler", resource)
 
+    def setUp(self):
+        """
+        Makes sure that the CharmScaler is in the available state before each
+        test is executed.
+        """
         try:
-            cls.d.sentry.wait_for_messages({"charmscaler": "Available"})
+            self.d.sentry.wait_for_messages({"charmscaler": "Available"})
         except amulet.helpers.TimeoutError:
             message = "CharmScaler charm did not become available in time"
             amulet.raise_status(amulet.FAIL, msg=message)
@@ -86,7 +87,7 @@ class TestCharm(unittest.TestCase):
                     actual_units = len(m.applications[SCALABLE_APP].units)
                     if actual_units == expected_units:
                         break
-                    await asyncio.sleep(0)
+                    await asyncio.sleep(5)
             finally:
                 await m.disconnect()
         except amulet.helpers.TimeoutError:
@@ -98,24 +99,19 @@ class TestCharm(unittest.TestCase):
             amulet.raise_status(amulet.FAIL, msg=msg)
 
     def test_scaling(self):
-        loop.run(*[self._manual_scale(count) for count in [2, 4, 1]])
+        """
+        Testing manual scaling by configuring units_max and units_min to a set
+        number.
 
-    def test_restricted(self):
-        self.d.configure("charmscaler", {
-            "scaling_units_max": 5
-        })
-        try:
-            self.d.sentry.wait_for_messages({
-                "charmscaler":
-                re.compile(r"Refusing to set a capacity limit max value")
-            })
-        except amulet.helpers.TimeoutError:
-            message = "Never got restricted status message from charmscaler"
-            amulet.raise_status(amulet.FAIL, msg=message)
-
-        self._configure({
+        This does not test the autoscaling capabilities but it confirms that
+        scaling is being done through the autoscaler. This means all of the
+        CharmScaler components are up and running.
+        """
+        self.addCleanup(self._configure, {
+            "scaling_units_min": 1,
             "scaling_units_max": 4
         })
+        loop.run(*[self._manual_scale(count) for count in [2, 4, 1]])
 
     def _run_action(self, action, action_args):
         charmscaler = self.d.sentry["charmscaler"][0]
@@ -135,6 +131,10 @@ class TestCharm(unittest.TestCase):
             amulet.raise_status(amulet.FAIL, msg=message)
 
     def test_alert_mails(self):
+        """
+        Test that checks wether or not alert mails when the charm is
+        configured with SMTP server settings.
+        """
         ports = self._run_action("smtpserver", {
             "operation": "start"
         })["ports"]
@@ -179,11 +179,3 @@ class TestCharm(unittest.TestCase):
 
             if int(count) > 0:
                 break
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    logging.getLogger("websocket").setLevel(logging.WARNING)
-    logging.getLogger("websockets.protocol").setLevel(logging.WARNING)
-    logging.getLogger("deployer").setLevel(logging.WARNING)
-    unittest.main()

@@ -21,19 +21,7 @@
                     "unit": "seconds"
                 },
                 "metricStreams": [
-                    {
-                        "id": "average.cpu.percent.stream",
-                        "metricName": "cpu.percent",
-                        "database": "telegraf",
-                        "measurement": "cpu",
-                        "fieldKey": "usage_idle",
-                        "function": "MEAN",
-                        "downsample": { "time": 10, "unit": "seconds" },
-                        "dataSettlingTime":  {
-                            "time": {{ metric.data_settling_interval }},
-                            "unit": "seconds"
-                        }
-                    }
+                    {% include "autoscaler/config-metric-streams.json" %}
                 ]
             }
         },
@@ -58,39 +46,9 @@
         "interval": { "time": {{ scaling.interval }}, "unit": "seconds" }
     },
     "predictionSubsystem": {
-        "predictors": [{
-            "id": "p1",
-            "type": "RuleBasedPredictor",
-            "metricStream": "average.cpu.percent.stream",
-            "parameters": {
-                "cooldownPeriod": {
-                    "time": {{ scaling.cooldown }},
-                    "unit": "seconds"
-                },
-                "scalingRules": [
-                    {
-                        "condition": "BELOW",
-                        "threshold": {{ scaling.threshold_upscale }},
-                        "period": {
-                            "time": {{ scaling.period_upscale }},
-                            "unit": "seconds"
-                        },
-                        "resize": "1",
-                        "unit": "INSTANCES"
-                    },
-                    {
-                        "condition": "ABOVE",
-                        "threshold": {{ scaling.threshold_downscale }},
-                        "period": {
-                            "time": {{ scaling.period_downscale }},
-                            "unit": "seconds"
-                        },
-                        "resize": "-1",
-                        "unit": "INSTANCES"
-                    }
-                ]
-            }
-        }],
+        "predictors": [
+            {% include "autoscaler/config-predictors.json" %}
+        ],
         "capacityLimits": [{
                 "id": "baseline",
                 "rank": 1,

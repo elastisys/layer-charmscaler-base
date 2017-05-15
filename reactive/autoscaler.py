@@ -71,7 +71,7 @@ class Autoscaler(DockerComponent, ConfigComponent):
                 if err.response.status_code != 400 or not is_ready():
                     raise err
 
-    def configure(self, cfg, influxdb):
+    def configure(self, cfg, influxdb, metrics):
         """
         Generate the Autoscaler-specfic config values and configure the
         instance.
@@ -83,7 +83,7 @@ class Autoscaler(DockerComponent, ConfigComponent):
         :raises: config.ConfigurationException
         :raises: requests.exceptions.RequestException
         """
-        self.config.extend(autoscaler_config, cfg, influxdb)
+        self.config.extend(autoscaler_config, cfg, influxdb, metrics)
         super().configure()
 
     def start(self):
@@ -144,7 +144,12 @@ def influxdb_config(influxdb):
     }
 
 
-def autoscaler_config(cfg, influxdb):
+def _validate_metrics(metrics):
+    # TODO
+    return metrics
+
+
+def autoscaler_config(cfg, influxdb, metrics):
     """
     Generates the Autoscaler's config dict.
 
@@ -156,22 +161,14 @@ def autoscaler_config(cfg, influxdb):
         "name": "{} Autoscaler".format(required(cfg, "name")),
         "alert": alerts_config(cfg),
         "influxdb": influxdb_config(influxdb),
+        "metrics": _validate_metrics(metrics),
         "metric": {
-            "poll_interval": required(cfg, "metric_poll_interval"),
-            "data_settling_interval":
-                required(cfg, "metric_data_settling_interval")
+            "poll_interval": required(cfg, "metric_poll_interval")
         },
         "scaling": {
             "min_units": required(cfg, "scaling_units_min"),
             "max_units": required(cfg, "scaling_units_max"),
-            "interval": required(cfg, "scaling_interval"),
-            # Since we're currently looking at the idle CPU value, the
-            # usage thresholds are in reverse.
-            "threshold_upscale": (100 - required(cfg, "scaling_cpu_max")),
-            "threshold_downscale": (100 - required(cfg, "scaling_cpu_min")),
-            "period_upscale": required(cfg, "scaling_period_upscale"),
-            "period_downscale": required(cfg, "scaling_period_downscale"),
-            "cooldown": required(cfg, "scaling_cooldown")
+            "interval": required(cfg, "scaling_interval")
         },
         "cloudpool": {
             "url": required(cfg, "charmpool_url")

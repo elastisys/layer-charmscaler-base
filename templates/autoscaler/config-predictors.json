@@ -1,0 +1,27 @@
+{% for metric in metrics %}
+{
+    "id": "predictor_{{ metric.name }}",
+    "type": "RuleBasedPredictor",
+    "metricStream": "{{ metric.name }}",
+    "parameters": {
+        "cooldownPeriod": {
+            "time": {{ metric.cooldown }},
+            "unit": "seconds"
+        },
+        "scalingRules": [
+            {% for rule in metric.rules.values() %}
+            {
+                "condition": {{ rule.condition }},
+                "threshold": {{ rule.threshold }},
+                "period": {
+                    "time": {{ rule.period }},
+                    "unit": "seconds"
+                },
+                "resize": {{ rule.resize }},
+                "unit": "INSTANCES"
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+}{% if not loop.last %},{% endif %}
+{% endfor %}
