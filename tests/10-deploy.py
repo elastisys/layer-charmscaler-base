@@ -12,7 +12,8 @@ import unittest
 
 log = logging.getLogger(__name__)
 
-SCALABLE_CHARM = "ubuntu"
+SCALABLE_APP = "ubuntu"
+SCALABLE_CHARM = "cs:ubuntu-10"
 
 
 class TestCharm(unittest.TestCase):
@@ -35,14 +36,14 @@ class TestCharm(unittest.TestCase):
 
         cls.d.add("influxdb", charm="cs:~chris.macnaughton/influxdb-7")
         cls.d.add("telegraf", charm="cs:telegraf-2")
-        cls.d.add(SCALABLE_CHARM)
+        cls.d.add(SCALABLE_APP, charm=SCALABLE_CHARM)
 
         cls.d.relate("charmscaler:db-api", "influxdb:query")
         cls.d.relate("telegraf:influxdb-api", "influxdb:query")
         cls.d.relate("telegraf:juju-info",
-                     "{}:juju-info".format(SCALABLE_CHARM))
+                     "{}:juju-info".format(SCALABLE_APP))
         cls.d.relate("charmscaler:scalable-charm",
-                     "{}:juju-info".format(SCALABLE_CHARM))
+                     "{}:juju-info".format(SCALABLE_APP))
 
         try:
             cls.d.setup(timeout=900)
@@ -69,7 +70,7 @@ class TestCharm(unittest.TestCase):
             amulet.raise_status(amulet.FAIL, msg=message)
 
     async def _manual_scale(self, expected_units):
-        log.info("Scaling '{}' to {} unit(s)...".format(SCALABLE_CHARM,
+        log.info("Scaling '{}' to {} unit(s)...".format(SCALABLE_APP,
                                                         expected_units))
 
         self._configure({
@@ -82,7 +83,7 @@ class TestCharm(unittest.TestCase):
             await m.connect_current()
             try:
                 for i in amulet.helpers.timeout_gen(300):
-                    actual_units = len(m.applications[SCALABLE_CHARM].units)
+                    actual_units = len(m.applications[SCALABLE_APP].units)
                     if actual_units == expected_units:
                         break
                     await asyncio.sleep(0)
@@ -90,7 +91,7 @@ class TestCharm(unittest.TestCase):
                 await m.disconnect()
         except amulet.helpers.TimeoutError:
             msg = ("The CharmScaler did not scale the application '{}' to {} "
-                   "unit(s) in time.").format(SCALABLE_CHARM, expected_units)
+                   "unit(s) in time.").format(SCALABLE_APP, expected_units)
             amulet.raise_status(amulet.FAIL, msg=msg)
         except JujuAPIError as e:
             msg = ("Juju API error: {}").format(str(e))
