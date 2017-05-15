@@ -3,6 +3,7 @@ import amulet
 from amulet_utils import attach_resource, get_juju_credentials
 import asyncio
 import json
+from juju import loop
 from juju.errors import JujuAPIError
 from juju.model import Model
 import logging
@@ -17,8 +18,6 @@ SCALABLE_CHARM = "ubuntu"
 class TestCharm(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.loop = asyncio.get_event_loop()
-
         cls.d = amulet.Deployment(series="xenial")
 
         credentials = get_juju_credentials()
@@ -69,41 +68,36 @@ class TestCharm(unittest.TestCase):
             message = "Timeout configuring charmscaler: {}".format(config)
             amulet.raise_status(amulet.FAIL, msg=message)
 
-    async def _wait_for_unit_count(self, expected_units, timeout=300):
+    async def _manual_scale(self, expected_units):
+        log.info("Scaling '{}' to {} unit(s)...".format(SCALABLE_CHARM,
+                                                        expected_units))
+
+        self._configure({
+            "scaling_units_min": expected_units,
+            "scaling_units_max": expected_units
+        })
+
+        try:
             m = Model()
             await m.connect_current()
             try:
-                for i in amulet.helpers.timeout_gen(timeout):
+                for i in amulet.helpers.timeout_gen(300):
                     actual_units = len(m.applications[SCALABLE_CHARM].units)
                     if actual_units == expected_units:
                         break
                     await asyncio.sleep(0)
             finally:
                 await m.disconnect()
-
-    def _manual_scale(self, unit_count):
-        log.info("Scaling '{}' to {} unit(s)...".format(SCALABLE_CHARM,
-                                                        unit_count))
-
-        self._configure({
-            "scaling_units_min": unit_count,
-            "scaling_units_max": unit_count
-        })
-
-        try:
-            self.loop.run_until_complete(self._wait_for_unit_count(unit_count))
         except amulet.helpers.TimeoutError:
             msg = ("The CharmScaler did not scale the application '{}' to {} "
-                   "unit(s) in time.").format(SCALABLE_CHARM, unit_count)
+                   "unit(s) in time.").format(SCALABLE_CHARM, expected_units)
             amulet.raise_status(amulet.FAIL, msg=msg)
         except JujuAPIError as e:
             msg = ("Juju API error: {}").format(str(e))
             amulet.raise_status(amulet.FAIL, msg=msg)
 
     def test_scaling(self):
-        self._manual_scale(2)
-        self._manual_scale(4)
-        self._manual_scale(1)
+        loop.run(*[self._manual_scale(count) for count in [2, 4, 1]])
 
     def test_restricted(self):
         self.d.configure("charmscaler", {
@@ -184,12 +178,6 @@ class TestCharm(unittest.TestCase):
 
             if int(count) > 0:
                 break
-
-    @classmethod
-    def tearDownClass(cls):
-        for task in asyncio.Task.all_tasks():
-            task.cancel()
-        cls.loop.close()
 
 
 if __name__ == "__main__":
