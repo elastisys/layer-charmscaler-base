@@ -1,4 +1,4 @@
-repo: https://github.com/elastisys/layer-charmscaler
+repo: https://github.com/elastisys/layer-charmscaler-base
 includes:
   - layer:docker
   - interface:influxdb-api
