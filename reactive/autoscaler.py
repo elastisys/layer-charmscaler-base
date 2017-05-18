@@ -20,7 +20,7 @@ class Autoscaler(DockerComponent, ConfigComponent):
     :param tag: Docker image tag
     :type tag: str
     """
-    def __init__(self, cfg, tag):
+    def __init__(self, cfg, image, tag):
         self.unit_id = local_unit().replace('/', '-')
         super().__init__("autoscaler", cfg["port_autoscaler"], {
             "initialize": "autoscaler/instances",
@@ -28,7 +28,7 @@ class Autoscaler(DockerComponent, ConfigComponent):
             "configure": "autoscaler/instances/{}/config".format(self.unit_id),
             "start": "autoscaler/instances/{}/start".format(self.unit_id),
             "stop": "autoscaler/instances/{}/stop".format(self.unit_id)
-        }, tag=tag)
+        }, image=image, tag=tag)
 
     def compose_up(self, *args, **kwargs):
         """

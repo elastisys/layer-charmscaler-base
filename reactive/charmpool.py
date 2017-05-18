@@ -11,8 +11,8 @@ class Charmpool(DockerComponent):
     :param tag: Docker image tag
     :type tag: str
     """
-    def __init__(self, cfg, tag):
-        super().__init__("charmpool", tag=tag)
+    def __init__(self, cfg, image, tag):
+        super().__init__("charmpool", image=image, tag=tag)
 
     def compose_up(self, cfg, application):
         """

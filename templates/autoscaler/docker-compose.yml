@@ -6,7 +6,7 @@ services:
     extends:
       file: "../docker-compose-base.yml"
       service: "_base"
-    image: "elastisys/charmscaler-restricted:{{ tag }}"
+    image: "{{ image }}:{{ tag }}"
     volumes:
       - "/var/log/elastisys:/var/log/elastisys"
       - "/var/lib/elastisys:/var/lib/elastisys"

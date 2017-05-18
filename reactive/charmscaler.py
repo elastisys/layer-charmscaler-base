@@ -15,14 +15,14 @@ from reactive.charmpool import Charmpool
 from reactive.component import DockerComponent, DockerComponentUnhealthy
 from reactive.config import ConfigurationException
 
-AUTOSCALER_VERSION = "5.0.1"
-CHARMPOOL_VERSION = "0.0.4"
-
 cfg = config()
 
+AUTOSCALER_VERSION = cfg["autoscaler_version"]
+CHARMPOOL_VERSION = cfg["charmpool_version"]
+
 components = [
-    Charmpool(cfg, tag=CHARMPOOL_VERSION),
-    Autoscaler(cfg, tag=AUTOSCALER_VERSION)
+    Charmpool(cfg, image=cfg["charmpool_image"], tag=CHARMPOOL_VERSION),
+    Autoscaler(cfg, image=cfg["autoscaler_image"], tag=AUTOSCALER_VERSION)
 ]
 
 # All CharmScaler states, each state depends on the states before it

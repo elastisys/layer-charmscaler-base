@@ -100,6 +100,22 @@ options:
     default: INFO NOTICE WARN ERROR FATAL
     description: |
       Alert levels that should trigger alert mails to be sent out
+  autoscaler_version:
+    type: string
+    description: |
+      Autoscaler Docker image version tag
+  autoscaler_image:
+    type: string
+    description: |
+      Autoscaler Docker image
+  charmpool_version:
+    type: string
+    description: |
+      Charmpool Docker image version tag
+  charmpool_image:
+    type: string
+    description: |
+      Charmpool Docker image
   charmpool_url:
     type: string
     default: http://charmpool:80

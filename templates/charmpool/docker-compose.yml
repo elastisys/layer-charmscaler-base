@@ -6,7 +6,7 @@ services:
     extends:
       file: "../docker-compose-base.yml"
       service: "_base"
-    image: "elastisys/charmpool:{{ tag }}"
+    image: "{{ image }}:{{ tag }}"
     environment:
       - "CHARMPOOL_API_ENDPOINT={{ juju_api_endpoint }}"
       - "CHARMPOOL_MODEL_UUID={{ juju_model_uuid }}"

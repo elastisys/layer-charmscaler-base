@@ -57,10 +57,13 @@ class DockerComponent(Component):
                          ':paramref:`name`' parameter.
     :vartype compose_config: :class:`Config`
     """
-    def __init__(self, name, *args, tag="latest"):
+    def __init__(self, name, *args, image=None, tag="latest"):
         super().__init__(name, *args)
         self.compose_config = Config("docker-compose.yml", name)
-        self.compose_config.extend(lambda: {"tag": tag})
+        self.compose_config.extend(lambda: {
+            "image": image,
+            "tag": tag
+        })
 
     @property
     def _compose(self):

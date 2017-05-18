@@ -28,7 +28,7 @@ class TestAutoscaler(unittest.TestCase):
         cls.autoscaler = Autoscaler({
             "name": "OpenStackScaler",
             "port_autoscaler": 8080
-        }, "latest")
+        }, "testimage", "latest")
 
     def setUp(self):
         patcher = mock.patch("reactive.component.HTTP_RETRY_LIMIT")
