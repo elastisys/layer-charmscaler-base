@@ -2,7 +2,7 @@
 
 charm_dir := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-all: lint unit_test build
+all: lint unit_test
 
 clean:
 	rm -rf $(charm_dir).tox
@@ -18,11 +18,4 @@ ifdef VERBOSE
 	tox -c $(charm_dir)tox.ini -- -v -s
 else
 	tox -c $(charm_dir)tox.ini
-endif
-
-build: clean
-ifdef FORCE
-	charm build $(charm_dir) --force
-else
-	charm build $(charm_dir)
 endif
