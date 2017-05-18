@@ -9,7 +9,7 @@ from charms.docker import Docker
 from charms.reactive import (all_states, hook, remove_state, set_state, when,
                              when_all, when_not)
 
-from reactive.autoscaler import Autoscaler
+from reactive.autoscaler import Autoscaler, MetricValidationException
 from reactive import charmscaler_metrics
 from reactive.charmpool import Charmpool
 from reactive.component import DockerComponent, DockerComponentUnhealthy
@@ -80,6 +80,8 @@ def _execute(method, *args, classinfo=None, pre_healthcheck=True, **kwargs):
     except ConfigurationException as err:
         msg = "Error while configuring {}: {}".format(err.config.filename, err)
     except DockerComponentUnhealthy as err:
+        msg = str(err)
+    except MetricValidationException as err:
         msg = str(err)
 
     status_set("blocked", msg)

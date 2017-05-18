@@ -6,6 +6,10 @@ from reactive.component import ConfigComponent, DockerComponent
 from reactive.config import Config, required
 
 
+class MetricValidationException(Exception):
+    pass
+
+
 class Autoscaler(DockerComponent, ConfigComponent):
     """
     This class includes the specific instructions and manages the necesssary
@@ -144,9 +148,44 @@ def influxdb_config(influxdb):
     }
 
 
+def _validate_config_options(cfg, options):
+    for key, data_type in options:
+        if (key not in cfg or cfg[key] is None or
+                data_type == str and cfg[key] == ""):
+            raise ValueError("Missing value: {}".format(key))
+
+        if type(cfg[key]) != data_type:
+            raise ValueError("Invalid type: {}").format(key)
+
+
 def _validate_metrics(metrics):
-    # TODO
-    return metrics
+    for metric in metrics:
+        try:
+            _validate_config_options(metric, [
+                ("database", str),
+                ("name", str),
+                ("tag", str),
+                ("field", str),
+                ("aggregate_function", str),
+                ("downsample", int),
+                ("data_settling", int),
+                ("cooldown", int),
+                ("rules", dict)
+            ])
+        except ValueError as err:
+            raise MetricValidationException("Metric error: {}".format(err))
+
+        try:
+            for name, rule in metric["rules"].items():
+                _validate_config_options(rule, [
+                    ("condition", str),
+                    ("threshold", int),
+                    ("period", int),
+                    ("resize", int)
+                ])
+        except ValueError as err:
+            msg = "Scaling rule '{}' error: {}".format(name, err)
+            raise MetricValidationException(msg)
 
 
 def autoscaler_config(cfg, influxdb, metrics):
@@ -157,11 +196,13 @@ def autoscaler_config(cfg, influxdb, metrics):
     :type influxdb: InfluxdbClient
     :returns: dict with the Autoscaler's configuration
     """
+    _validate_metrics(metrics)
+
     return {
         "name": "{} Autoscaler".format(required(cfg, "name")),
         "alert": alerts_config(cfg),
         "influxdb": influxdb_config(influxdb),
-        "metrics": _validate_metrics(metrics),
+        "metrics": metrics,
         "metric": {
             "poll_interval": required(cfg, "metric_poll_interval")
         },
