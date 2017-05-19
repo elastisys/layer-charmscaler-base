@@ -155,7 +155,10 @@ def _validate_config_options(cfg, options):
             raise ValueError("Missing value: {}".format(key))
 
         if type(cfg[key]) != data_type:
-            raise ValueError("Invalid type: {}").format(key)
+            raise ValueError("Invalid type: {} (is '{}', should be '{}')"
+                             .format(key,
+                                     type(cfg[key]).__name__,
+                                     data_type.__name__))
 
 
 def _validate_metrics(metrics):
