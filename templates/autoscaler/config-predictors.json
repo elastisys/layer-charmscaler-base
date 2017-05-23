@@ -11,7 +11,7 @@
         "scalingRules": [
             {% for rule in metric.rules.values() %}
             {
-                "condition": {{ rule.condition }},
+                "condition": "{{ rule.condition }}",
                 "threshold": {{ rule.threshold }},
                 "period": {
                     "time": {{ rule.period }},
