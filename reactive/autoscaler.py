@@ -180,7 +180,7 @@ def _validate_metrics(metrics):
 
         try:
             for name, rule in metric["rules"].items():
-                _validate_config_options(rule, [
+                _validate_config_options(rule.to_dict(), [
                     ("condition", str),
                     ("threshold", int),
                     ("period", int),
