@@ -150,15 +150,14 @@ def influxdb_config(influxdb):
 
 def _validate_config_options(cfg, options):
     for key, data_type in options:
+        # Check if config value is missing
         if (key not in cfg or cfg[key] is None or
                 data_type == str and cfg[key] == ""):
             raise ValueError("Missing value: {}".format(key))
 
-        if type(cfg[key]) != data_type:
-            raise ValueError("Invalid type: {} (is '{}', should be '{}')"
-                             .format(key,
-                                     type(cfg[key]).__name__,
-                                     data_type.__name__))
+        # Check if config value is valid by typecasting it, e.g., a non-number
+        # typecasted to an int would result in an error
+        data_type(cfg[key])
 
 
 def _validate_metrics(metrics):
@@ -180,13 +179,13 @@ def _validate_metrics(metrics):
 
         try:
             for name, rule in metric["rules"].items():
-                _validate_config_options(rule.to_dict(), [
+                _validate_config_options(rule, [
                     ("condition", str),
                     ("threshold", int),
                     ("period", int),
                     ("resize", int)
                 ])
-        except ValueError as err:
+        except (TypeError, ValueError) as err:
             msg = "Scaling rule '{}' error: {}".format(name, err)
             raise MetricValidationException(msg)
 
