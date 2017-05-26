@@ -10,7 +10,6 @@ from charms.reactive import (all_states, hook, remove_state, set_state, when,
                              when_all, when_not)
 
 from reactive.autoscaler import Autoscaler, MetricValidationException
-from reactive import charmscaler_metrics
 from reactive.charmpool import Charmpool
 from reactive.component import DockerComponent, DockerComponentUnhealthy
 from reactive.config import ConfigurationException
@@ -256,6 +255,7 @@ def configure(influxdb):
     Configure the autoscaler. This is done at every run, however, if the config
     is unchanged nothing happens.
     """
+    from reactive import charmscaler_metrics
     metrics = charmscaler_metrics.get_metrics()
     if _execute("configure", cfg, influxdb, metrics, classinfo=Autoscaler):
         set_state("charmscaler.configured")
