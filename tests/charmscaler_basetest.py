@@ -132,7 +132,7 @@ class BaseTest:
 
     def test_alert_mails(self):
         """
-        Test that checks wether or not alert mails when the charm is
+        Test that checks wether or not alert mails are sent when the charm is
         configured with SMTP server settings.
         """
         ports = self._run_action("smtpserver", {
