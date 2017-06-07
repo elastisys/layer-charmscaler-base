@@ -11,7 +11,8 @@ from charms.reactive import (all_states, hook, remove_state, set_state, when,
 
 from reactive.autoscaler import Autoscaler, MetricValidationException
 from reactive.charmpool import Charmpool
-from reactive.component import DockerComponent, DockerComponentUnhealthy
+from reactive.component import (DockerComponent, DockerComponentStarting,
+                                DockerComponentUnhealthy)
 from reactive.config import ConfigurationException
 
 cfg = config()
@@ -78,7 +79,7 @@ def _execute(method, *args, classinfo=None, pre_healthcheck=True, **kwargs):
         msg = "HTTP error while executing '{}': {}".format(method, error_msg)
     except ConfigurationException as err:
         msg = "Error while configuring {}: {}".format(err.config.filename, err)
-    except DockerComponentUnhealthy as err:
+    except (DockerComponentUnhealthy, DockerComponentStarting) as err:
         msg = str(err)
     except MetricValidationException as err:
         msg = str(err)

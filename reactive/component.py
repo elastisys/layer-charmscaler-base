@@ -10,9 +10,11 @@ from charms.docker import Compose, Docker
 from reactive.config import Config
 from reactive.helpers import log_to_juju
 
-# Maximum number of seconds to wait for container to become healthy.
-# This is mainly important during startup because that can take a while.
-HEALTH_RETRY_LIMIT = 60
+# Maximum number of seconds for a container to become healthy at startup.
+HEALTH_STARTUP_RETRY_LIMIT = 60
+
+# Maximum number of seconds for a container to become healthy at runtime.
+HEALTH_RUNTIME_RETRY_LIMIT = 10
 
 # Number of retries for a failed HTTP request.
 HTTP_RETRY_LIMIT = 5
@@ -38,6 +40,13 @@ class DockerComponentUnhealthy(Exception):
     def __init__(self, component):
         self.component = component
         super().__init__("Unhealthy component: {} - "
+                         "Check the Docker container logs".format(component))
+
+
+class DockerComponentStarting(Exception):
+    def __init__(self, component):
+        self.component = component
+        super().__init__("Component timed out while starting up: {} - "
                          "Check the Docker container logs".format(component))
 
 
@@ -69,8 +78,10 @@ class DockerComponent(Component):
     def _compose(self):
         return Compose(os.path.dirname(str(self.compose_config)))
 
+    @backoff.on_exception(backoff.constant, DockerComponentStarting,
+                          max_tries=HEALTH_STARTUP_RETRY_LIMIT, jitter=None)
     @backoff.on_exception(backoff.constant, DockerComponentUnhealthy,
-                          max_tries=HEALTH_RETRY_LIMIT, jitter=None)
+                          max_tries=HEALTH_RUNTIME_RETRY_LIMIT, jitter=None)
     def healthcheck(self):
         """
         Healthcheck is used to poll the Docker health state. A health test
@@ -81,10 +92,20 @@ class DockerComponent(Component):
         :class:`DockerComponentUnhealthy` is raised. If not, the container is
         currently considered healthy by the test command.
 
-        :raises: DockerComponentUnhealthy
+        :raises DockerComponentUnhealthy: The containers healthcheck failed
+        :raises DockerComponentStarting: The container is starting up
         """
         log("Healthchecking {}".format(self.name), level=DEBUG)
-        if not Docker().healthcheck(self.name):
+
+        health = Docker().healthcheck(self.name, verbose=True)
+
+        if not health:
+            raise DockerComponentUnhealthy(self)
+
+        if health["Status"] == "starting":
+            raise DockerComponentStarting(self)
+
+        if health["Status"] != "healthy":
             raise DockerComponentUnhealthy(self)
 
     def compose_up(self):
