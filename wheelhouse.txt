@@ -1,9 +1,4 @@
 requests>=2.11.1,<3.0.0
-
-# Currently needed by chardet - remove when fix is released upstream
-pytest-runner
-setuptools_scm
-
 backoff>=1.3.2,<2.0.0
 
 # Tests only
