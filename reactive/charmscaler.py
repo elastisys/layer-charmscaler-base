@@ -171,14 +171,14 @@ def update_status():
 
 @when_all(*get_state_dependencies("charmscaler.composed"))
 @when_not("scalable-charm.available")
-def wait_for_scalable_charm():
+def scalable_charm_wait():
     """
     Wait for a juju-info relation to a charm that is going to be autoscaled.
     """
     status_set("blocked", "Waiting for relation to scalable charm")
 
 
-@hook("scalable-charm-relation-broken")
+@hook("scalable-charm-relation-departed")
 def scalable_charm_lost(scale_relation):
     stop()
 
