@@ -2,9 +2,7 @@ import os
 
 from requests.exceptions import HTTPError
 
-from charmhelpers.core.hookenv import (application_version_set, config, log,
-                                       remote_service_name, resource_get,
-                                       status_set, ERROR)
+from charmhelpers.core import hookenv
 from charms.docker import Docker
 from charms.reactive import (all_states, hook, remove_state, set_state, when,
                              when_all, when_not)
@@ -15,7 +13,7 @@ from reactive.component import (DockerComponent, DockerComponentStarting,
                                 DockerComponentUnhealthy)
 from reactive.config import ConfigurationException
 
-cfg = config()
+cfg = hookenv.config()
 
 AUTOSCALER_VERSION = cfg["autoscaler_version"]
 CHARMPOOL_VERSION = cfg["charmpool_version"]
@@ -84,8 +82,8 @@ def _execute(method, *args, classinfo=None, pre_healthcheck=True, **kwargs):
     except MetricValidationException as err:
         msg = str(err)
 
-    status_set("blocked", msg)
-    log(msg, level=ERROR)
+    hookenv.status_set("blocked", msg)
+    hookenv.log(msg, level=hookenv.ERROR)
     return False
 
 
@@ -94,7 +92,7 @@ def wait_for_docker():
     """
     Wait for Docker to get installed and start up.
     """
-    status_set("maintenance", "Installing Docker")
+    hookenv.status_set("maintenance", "Installing Docker")
 
 
 def _prepare_volume_directories():
@@ -115,10 +113,10 @@ def install():
     """
     Prepare and install the CharmScaler components.
     """
-    status_set("maintenance", "Installing")
+    hookenv.status_set("maintenance", "Installing")
 
-    application_version_set("{}, {}".format(AUTOSCALER_VERSION,
-                                            CHARMPOOL_VERSION))
+    hookenv.application_version_set("{}, {}".format(AUTOSCALER_VERSION,
+                                                    CHARMPOOL_VERSION))
 
     _prepare_volume_directories()
 
@@ -126,15 +124,15 @@ def install():
 
     for component in components:
         msg = "Loading Docker image from {} resource".format(component)
-        log(msg)
-        status_set("maintenance", msg)
+        hookenv.log(msg)
+        hookenv.status_set("maintenance", msg)
 
-        path = resource_get(str(component))
+        path = hookenv.resource_get(str(component))
 
         if not path:
             msg = "Missing resource: {}".format(component)
-            log(msg, level=ERROR)
-            status_set("blocked", msg)
+            hookenv.log(msg, level=hookenv.ERROR)
+            hookenv.status_set("blocked", msg)
             return
 
         docker.load(path)
@@ -175,7 +173,7 @@ def scalable_charm_wait():
     """
     Wait for a juju-info relation to a charm that is going to be autoscaled.
     """
-    status_set("blocked", "Waiting for relation to scalable charm")
+    hookenv.status_set("blocked", "Waiting for relation to scalable charm")
 
 
 @hook("scalable-charm-relation-departed")
@@ -215,7 +213,7 @@ def compose(scale_relation):
         if len(scale_relation_ids) < 1:
             raise ComposeException("Scalable charm relation was lost")
 
-        application = remote_service_name(scale_relation_ids[0])
+        application = hookenv.remote_service_name(scale_relation_ids[0])
 
         if _execute("compose_up", cfg, application, classinfo=DockerComponent,
                     pre_healthcheck=False):
@@ -224,8 +222,8 @@ def compose(scale_relation):
     except ComposeException as err:
         msg = "Error while composing: {}".format(err)
 
-        status_set("blocked", msg)
-        log(msg, level=ERROR)
+        hookenv.status_set("blocked", msg)
+        hookenv.log(msg, level=hookenv.ERROR)
 
 
 @when_all(*get_state_dependencies("charmscaler.initialized"))
@@ -244,7 +242,7 @@ def wait_for_influxdb():
     """
     Wait for relation to InfluxDB charm.
     """
-    status_set("blocked", "Waiting for InfluxDB relation")
+    hookenv.status_set("blocked", "Waiting for InfluxDB relation")
 
 
 @when_all(*get_state_dependencies("charmscaler.configured"))
@@ -286,5 +284,5 @@ def available():
     """
     We're good to go!
     """
-    status_set("active", "Available")
+    hookenv.status_set("active", "Available")
     set_state("charmscaler.available")

@@ -1,6 +1,6 @@
 from requests.exceptions import HTTPError
 
-from charmhelpers.core.hookenv import local_unit, log
+from charmhelpers.core import hookenv
 
 from reactive.component import ConfigComponent, DockerComponent
 from reactive.config import Config, required
@@ -21,7 +21,7 @@ class Autoscaler(DockerComponent, ConfigComponent):
     :type tag: str
     """
     def __init__(self, cfg, image, tag):
-        self.unit_id = local_unit().replace('/', '-')
+        self.unit_id = hookenv.local_unit().replace('/', '-')
         super().__init__("autoscaler", cfg["port_autoscaler"], {
             "initialize": "autoscaler/instances",
             "status": "autoscaler/instances/{}/status".format(self.unit_id),
@@ -67,7 +67,7 @@ class Autoscaler(DockerComponent, ConfigComponent):
                     try:
                         self.send_request("status")
                     except HTTPError as err:
-                        log("Autoscaler status request error: {}".format(err))
+                        hookenv.log("Autoscaler status error: {}".format(err))
                         return False
                     return True
 

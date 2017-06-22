@@ -5,7 +5,7 @@ import backoff
 from requests import Session
 from requests.exceptions import RequestException
 
-from charmhelpers.core.hookenv import log, status_set, DEBUG, ERROR
+from charmhelpers.core import hookenv
 from charms.docker import Compose, Docker
 
 from reactive.config import Config
@@ -96,7 +96,7 @@ class DockerComponent(Component):
         :raises DockerComponentUnhealthy: The containers healthcheck failed
         :raises DockerComponentStarting: The container is starting up
         """
-        log("Healthchecking {}".format(self.name), level=DEBUG)
+        hookenv.log("Healthchecking {}".format(self.name), level=hookenv.DEBUG)
 
         health = Docker().healthcheck(self.name, verbose=True)
 
@@ -130,8 +130,8 @@ class DockerComponent(Component):
 
         # TODO This will show up even though a restart might not have occured.
         msg = "(Re)starting Docker Compose service: {}".format(self)
-        status_set("maintenance", msg)
-        log(msg)
+        hookenv.status_set("maintenance", msg)
+        hookenv.log(msg)
 
         self._compose.up()
 
@@ -174,7 +174,8 @@ class HTTPComponent(Component):
 
     @backoff.on_exception(backoff.expo, RequestException,
                           max_tries=HTTP_RETRY_LIMIT,
-                          on_backoff=partial(backoff_handler, level=ERROR))
+                          on_backoff=partial(backoff_handler,
+                                             level=hookenv.ERROR))
     def send_request(self, path, method="GET", headers=None, data=None,
                      data_type="json"):
         """
@@ -205,9 +206,9 @@ class HTTPComponent(Component):
         else:
             raise Exception("Unhandeled REST API verb: {}".format(method))
 
-        log("Request URL: {}".format(url), level=DEBUG)
-        log("Response status: {}".format(response.status_code), level=DEBUG)
-        log("Response data: {}".format(response.text), level=DEBUG)
+        hookenv.log("Request URL: {}".format(url), level=hookenv.DEBUG)
+        hookenv.log("Response status: {}".format(response.status_code),
+                    level=hookenv.DEBUG)
 
         response.raise_for_status()
 
@@ -251,8 +252,8 @@ class ConfigComponent(HTTPComponent):
 
         if self.config.has_changed():
             msg = "Configuring {}".format(self)
-            status_set("maintenance", msg)
-            log(msg)
+            hookenv.status_set("maintenance", msg)
+            hookenv.log(msg)
 
             with self.config.open() as config_file:
                 self.send_request("configure", method="POST",
