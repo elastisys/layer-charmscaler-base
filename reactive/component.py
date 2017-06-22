@@ -1,14 +1,15 @@
+from functools import partial
 import os
 
 import backoff
 from requests import Session
 from requests.exceptions import RequestException
 
-from charmhelpers.core.hookenv import log, status_set, DEBUG
+from charmhelpers.core.hookenv import log, status_set, DEBUG, ERROR
 from charms.docker import Compose, Docker
 
 from reactive.config import Config
-from reactive.helpers import log_to_juju
+from reactive.helpers import backoff_handler
 
 # Maximum number of seconds for a container to become healthy at startup.
 HEALTH_STARTUP_RETRY_LIMIT = 60
@@ -18,8 +19,6 @@ HEALTH_RUNTIME_RETRY_LIMIT = 10
 
 # Number of retries for a failed HTTP request.
 HTTP_RETRY_LIMIT = 5
-
-log_to_juju("backoff")
 
 
 class Component:
@@ -79,9 +78,11 @@ class DockerComponent(Component):
         return Compose(os.path.dirname(str(self.compose_config)))
 
     @backoff.on_exception(backoff.constant, DockerComponentStarting,
-                          max_tries=HEALTH_STARTUP_RETRY_LIMIT, jitter=None)
+                          max_tries=HEALTH_STARTUP_RETRY_LIMIT, jitter=None,
+                          on_backoff=backoff_handler)
     @backoff.on_exception(backoff.constant, DockerComponentUnhealthy,
-                          max_tries=HEALTH_RUNTIME_RETRY_LIMIT, jitter=None)
+                          max_tries=HEALTH_RUNTIME_RETRY_LIMIT, jitter=None,
+                          on_backoff=backoff_handler)
     def healthcheck(self):
         """
         Healthcheck is used to poll the Docker health state. A health test
@@ -172,7 +173,8 @@ class HTTPComponent(Component):
             raise NotImplementedError(msg)
 
     @backoff.on_exception(backoff.expo, RequestException,
-                          max_tries=HTTP_RETRY_LIMIT)
+                          max_tries=HTTP_RETRY_LIMIT,
+                          on_backoff=partial(backoff_handler, level=ERROR))
     def send_request(self, path, method="GET", headers=None, data=None,
                      data_type="json"):
         """

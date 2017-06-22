@@ -5,14 +5,6 @@ import requests_mock
 import unittest
 import unittest.mock as mock
 
-# Disable backoff retry calls
-import backoff
-def noop_decorator(wait_gen, exception, max_tries=None, jitter=None):  # noqa
-    def decorator(f):
-        return f
-    return decorator
-backoff.on_exception = noop_decorator  # noqa
-
 from reactive.autoscaler import Autoscaler
 
 

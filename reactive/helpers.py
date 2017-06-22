@@ -1,8 +1,8 @@
 import hashlib
-import logging
+import sys
+import traceback
 
-from charmhelpers.core import unitdata
-from charmhelpers.core.hookenv import log as juju_log
+from charmhelpers.core import hookenv, unitdata
 
 
 def data_changed(data_id, data, hash_type="md5"):
@@ -30,14 +30,19 @@ def data_commit(data_id, data, hash_type="md5"):
     unitdata.kv().set(key, new_hash)
 
 
-def log_to_juju(name):
+def backoff_handler(details, level=hookenv.DEBUG):
     """
-    Forward logging to the Juju log
+    Slightly modified version of the default backoff handler to log using
+    DEBUG level rather than spamming the log with errors for every backoff
     """
-    class JujuHandler(logging.Handler):
-        def emit(self, record):
-            log_entry = self.format(record)
-            juju_log(log_entry, level=record.levelname)
-    log = logging.getLogger(name)
-    log.setLevel(logging.DEBUG)
-    log.addHandler(JujuHandler())
+    fmt = "Backing off {0}(...) for {1:.1f}s"
+    msg = fmt.format(details["target"].__name__, details["wait"])
+
+    exc_typ, exc, _ = sys.exc_info()
+    if exc is not None:
+        exc_fmt = traceback.format_exception_only(exc_typ, exc)[-1]
+        msg = "{0} ({1})".format(msg, exc_fmt.rstrip("\n"))
+    else:
+        msg = "{0} ({1})".format(msg, details["value"])
+
+    hookenv.log(msg, level=level)
