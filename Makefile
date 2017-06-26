@@ -8,7 +8,8 @@ clean:
 	rm -rf $(charm_dir).tox
 	rm -rf $(charm_dir).cache
 	rm -rf $(charm_dir).unit-state.db
-	rm -rf $(charm_dir)*/__pycache__
+	find $(charm_dir) -name "__pycache__" | xargs rm -rf
+	find $(charm_dir) -name "*.pyc" | xargs rm -rf
 
 lint:
 	tox -c $(charm_dir)tox.ini -e lint
