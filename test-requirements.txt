@@ -1,4 +1,7 @@
 amulet
 juju
-juju-deployer
+# Require manual installaton from ppa until
+# https://github.com/juju-solutions/bundletester/issues/108
+# is fixed
+#juju-deployer
 requests
