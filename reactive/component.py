@@ -142,6 +142,9 @@ class DockerComponent(Component):
     def compose_stop(self):
         self._compose.stop()
 
+    def cleanup(self):
+        self._compose.down(rmi=True)
+
 
 class HTTPComponent(Component):
     """

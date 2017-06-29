@@ -4,8 +4,8 @@ from requests.exceptions import HTTPError
 
 from charmhelpers.core import hookenv
 from charms.docker import Docker
-from charms.reactive import (all_states, hook, remove_state, set_state, when,
-                             when_all, when_not)
+from charms.reactive import (all_states, hook, is_state, remove_state,
+                             set_state, when, when_all, when_not)
 
 from reactive.autoscaler import Autoscaler, MetricValidationException
 from reactive.charmpool import Charmpool
@@ -57,6 +57,11 @@ def _execute(method, *args, classinfo=None, pre_healthcheck=True, **kwargs):
     :type pre_healthcheck: bool
     :returns: True if no errors occured, else False
     """
+
+    # Handlers can fire after the cleanup, simply ignore all executions
+    if is_state("charmscaler.cleaned_up"):
+        return
+
     try:
         if pre_healthcheck:
             healthy = _execute("healthcheck", classinfo=DockerComponent,
@@ -287,3 +292,12 @@ def available():
     """
     hookenv.status_set("active", "Available")
     set_state("charmscaler.available")
+
+
+@hook("stop")
+def cleanup():
+    """
+    Cleanup all components by removing Docker containers and images.
+    """
+    _execute("cleanup", pre_healthcheck=False, classinfo=DockerComponent)
+    set_state("charmscaler.cleaned_up")
