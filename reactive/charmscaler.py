@@ -176,8 +176,9 @@ def scalable_charm_wait():
     hookenv.status_set("blocked", "Waiting for relation to scalable charm")
 
 
-@hook("scalable-charm-relation-departed")
-def scalable_charm_lost(scale_relation):
+@when("charmscaler.composed")
+@when_not("scalable-charm.available")
+def scalable_charm_lost():
     stop()
 
     remove_state("charmscaler.composed")
