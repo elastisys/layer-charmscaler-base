@@ -45,19 +45,17 @@ def _download_resource(url, target_path):
                 f.write(chunk)
 
 
-def _get_resource(charm, resource):
-    env = "{}_RESOURCE_{}".format(charm.upper(), resource.upper())
+def _get_resource(app, resource, charm):
+    env = "{}_RESOURCE_{}".format(app.upper(), resource.upper())
     default_url = ("https://api.jujucharms.com/charmstore/v5/~elastisys/"
                    "{}/resource/{}?channel=edge".format(charm, resource))
     resource_path = os.getenv(env, default_url)
-
-    log.info("{} resource: {} = {}".format(charm, resource, resource_path))
 
     if os.path.isfile(resource_path):
         return resource_path
 
     try:
-        target_path = "/tmp/{}-{}.tar".format(charm, resource)
+        target_path = "/tmp/{}-{}.tar".format(app, resource)
         _download_resource(resource_path, target_path)
         return target_path
     except requests.exceptions.RequestException:
@@ -65,39 +63,40 @@ def _get_resource(charm, resource):
         amulet.raise_status(amulet.FAIL, msg=message)
 
 
-def attach_resource(charm, resource):
-    if not _has_resource(charm, resource):
-        resource_path = _get_resource(charm, resource)
-        _attach_resource(charm, resource, resource_path)
+def attach_resource(app, resource, charm):
+    if not _has_resource(app, resource):
+        resource_path = _get_resource(app, resource, charm)
+        log.info("{} resource: {} = {}".format(app, resource, resource_path))
+        _attach_resource(app, resource, resource_path)
 
 
 # Creds to https://github.com/juju-solutions/bundle-canonical-kubernetes/blob/master/tests/amulet_utils.py  # noqa
 
-def _attach_resource(charm, resource, resource_path):
+def _attach_resource(app, resource, resource_path):
     ''' Upload a resource to a deployed model.
-    :param: charm - the application to attach the resource
+    :param: app - the application to attach the resource
     :param: resource - The charm's resouce key
     :param: resource_path - the path on disk to upload the
     resource'''
 
     # the primary reason for this method is to replace a shell
     # script in the $ROOT dir of the charm
-    cmd = ['juju', 'attach', charm, "{}={}".format(resource, resource_path)]
+    cmd = ['juju', 'attach', app, "{}={}".format(resource, resource_path)]
     subprocess.call(cmd)
 
 
-def _has_resource(charm, resource):
+def _has_resource(app, resource):
     ''' Poll the controller to determine if we need to upload a resource
     '''
-    cmd = ['juju', 'resources', charm, '--format=yaml']
+    cmd = ['juju', 'resources', app, '--format=yaml']
     output = subprocess.check_output(cmd)
     resource_list = yaml.safe_load(output)
     for resource in resource_list['resources']:
         # We can assume this is the correct resource if it has a filesize
         # matches the name of the resource in the charms resource stream
-        if 'name' in resource and (charm in resource['name'] and
+        if 'name' in resource and (app in resource['name'] and
                                    resource['size'] > 0):
             # Display the found resource
-            print('Uploading {} for {}'.format(resource['name'], charm))
+            print('Uploading {} for {}'.format(resource['name'], app))
             return True
     return False

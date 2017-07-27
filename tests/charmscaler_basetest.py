@@ -49,7 +49,7 @@ class BaseTest:
             amulet.raise_status(amulet.SKIP, msg=message)
 
         for resource in ["autoscaler", "charmpool"]:
-            attach_resource("charmscaler", resource)
+            attach_resource("charmscaler", resource, charmscaler_charm)
 
     def setUp(self):
         """
