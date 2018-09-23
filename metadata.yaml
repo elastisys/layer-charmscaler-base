@@ -15,6 +15,7 @@ tags:
   - performance
 series:
   - xenial
+  - bionic
 subordinate: false
 requires:
   scalable-charm:
