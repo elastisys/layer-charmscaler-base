@@ -11,6 +11,11 @@ options:
     default: null
     description: |
       Juju controller API endpoint
+  juju_ca_cert:
+    type: string
+    default: null
+    description: |
+      Juju controller CA certificate (base64 encoded)
   juju_model_uuid:
     type: string
     default: null

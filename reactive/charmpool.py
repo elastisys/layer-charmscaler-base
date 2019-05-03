@@ -37,8 +37,15 @@ def compose_config(cfg, application):
     config = {
         "application": application
     }
-    for option in ("api_endpoint", "model_uuid", "username",
-                   "password", "refresh_interval"):
-        key = "juju_{}".format(option)
+
+    for key in (
+            "juju_api_endpoint",
+            "juju_ca_cert",
+            "juju_model_uuid",
+            "juju_username",
+            "juju_password",
+            "juju_refresh_interval",
+    ):
         config[key] = required(cfg, key)
+
     return config

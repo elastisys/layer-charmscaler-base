@@ -9,6 +9,7 @@ services:
     image: "{{ image }}:{{ tag }}"
     environment:
       - "CHARMPOOL_API_ENDPOINT={{ juju_api_endpoint }}"
+      - "CHARMPOOL_CA_CERT={{ juju_ca_cert }}"
       - "CHARMPOOL_MODEL_UUID={{ juju_model_uuid }}"
       - "CHARMPOOL_USERNAME={{ juju_username }}"
       - "CHARMPOOL_PASSWORD={{ juju_password }}"
