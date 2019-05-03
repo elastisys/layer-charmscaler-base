@@ -5,7 +5,7 @@
     },
     {% endif %}
     "monitoringSubsystem": {
-        "metricStreamer": {
+        "metricStreamers": [{
             "type": "InfluxdbMetricStreamer",
             "config": {
                 "host": "{{ influxdb.host }}",
@@ -24,7 +24,7 @@
                     {% include "autoscaler/config-metric-streams.json" %}
                 ]
             }
-        },
+        }],
         "systemHistorian": {
             "type": "InfluxdbSystemHistorian",
             "config": {

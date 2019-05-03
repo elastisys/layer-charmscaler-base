@@ -2,12 +2,10 @@
 {
     "id": "{{ metric.name }}",
     "database": "{{ metric.database }}",
-    "measurement": "{{ metric.tag }}",
-    "fieldKey": "{{ metric.field }}",
-    "function": "{{ metric.aggregate_function }}",
-    "downsample": {
-        "time": {{ metric.downsample }},
-        "unit": "seconds"
+    "query": {
+        "select": "{{ metric.aggregate_function }}({{ metric.field }})",
+        "from": "{{ metric.tag }}",
+        "groupBy": "time({{ metric.downsample }}s)"
     },
     "dataSettlingTime":  {
         "time": {{ metric.data_settling }},
