@@ -3,7 +3,6 @@ import os
 from requests.exceptions import HTTPError
 
 from charmhelpers.core import hookenv
-from charms.docker import Docker
 from charms.reactive import (all_states, hook, is_state, remove_state,
                              set_state, when, when_all, when_not)
 
@@ -124,23 +123,6 @@ def install():
                                                     CHARMPOOL_VERSION))
 
     _prepare_volume_directories()
-
-    docker = Docker()
-
-    for component in components:
-        msg = "Loading Docker image from {} resource".format(component)
-        hookenv.log(msg)
-        hookenv.status_set("maintenance", msg)
-
-        path = hookenv.resource_get(str(component))
-
-        if not path:
-            msg = "Missing resource: {}".format(component)
-            hookenv.log(msg, level=hookenv.ERROR)
-            hookenv.status_set("blocked", msg)
-            return
-
-        docker.load(path)
 
     set_state("charmscaler.installed")
 

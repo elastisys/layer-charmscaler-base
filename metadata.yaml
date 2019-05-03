@@ -22,10 +22,3 @@ requires:
     interface: juju-info
   db-api:
     interface: influxdb-api
-resources:
-  autoscaler:
-    type: file
-    filename: autoscaler.tar
-  charmpool:
-    type: file
-    filename: charmpool.tar
