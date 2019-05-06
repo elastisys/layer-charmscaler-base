@@ -53,7 +53,7 @@ options:
       Minimum amount of units to keep in pool
   scaling_units_max:
     type: int
-    default: 4
+    default: 10
     description: |
       Maximum amount of units to keep in pool
   scaling_interval:
