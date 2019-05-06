@@ -5,7 +5,7 @@
     "query": {
         "select": "{{ metric.aggregate_function }}({{ metric.field }})",
         "from": "{{ metric.tag }}",
-        "groupBy": "time({{ metric.downsample }}s)"
+        "groupBy": "time({{ metric.downsample }}s) fill(none)"
     },
     "dataSettlingTime":  {
         "time": {{ metric.data_settling }},
